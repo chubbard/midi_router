@@ -1,0 +1,29 @@
+<NotepadPlus>
+    <Project name="midi_router">
+        <Folder name=".venv">
+            <Folder name="Include" />
+            <Folder name="Scripts">
+                <File name=".venv\Scripts\activate" />
+                <File name=".venv\Scripts\activate.bat" />
+                <File name=".venv\Scripts\Activate.ps1" />
+                <File name=".venv\Scripts\deactivate.bat" />
+                <File name=".venv\Scripts\markdown-it.exe" />
+                <File name=".venv\Scripts\mido-connect.exe" />
+                <File name=".venv\Scripts\mido-play.exe" />
+                <File name=".venv\Scripts\mido-ports.exe" />
+                <File name=".venv\Scripts\mido-serve.exe" />
+                <File name=".venv\Scripts\pip.exe" />
+                <File name=".venv\Scripts\pip3.12.exe" />
+                <File name=".venv\Scripts\pip3.exe" />
+                <File name=".venv\Scripts\pygmentize.exe" />
+                <File name=".venv\Scripts\python.exe" />
+                <File name=".venv\Scripts\pythonw.exe" />
+            </Folder>
+            <File name=".venv\pyvenv.cfg" />
+        </Folder>
+        <File name="midi_router.py" />
+        <File name="print_midi.py" />
+        <File name="py.ini" />
+        <File name="requirements.txt" />
+    </Project>
+</NotepadPlus>
