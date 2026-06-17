@@ -13,6 +13,13 @@ platform at this time.  Copy the midi_router files to a directory then use
 the navigate a terminal to that directory and execute:
 
 ```
+python -m venv venv
+
+# Activate the new environment
+source venv/bin/activate  # On macOS/Linux
+# OR
+.venv\Scripts\activate     # On Windows (CMD)
+
 python -m pip install -r requirements.txt
 ```
 
@@ -24,7 +31,9 @@ To run midi_router all you need to do is execute the python scripts.
 python midi_router.py
 ```
 
-To establish the first route use the `route` command:
+To establish the first route use the `route` command.  Route command 
+understands autocompletion using the `TAB` key.  Escape names that 
+contain spaces by surrounding the name in double quotes `"`:
 
 ```
 midi > route "MIDI IN Device 1" "MIDI OUT Device 2" "MIDI OUT Device 3"
@@ -36,12 +45,22 @@ To display the active routes use the `routes` command:
 
 ```
 midi > routes
+1       Default App Loopback (A) 0 >>
+                -> Default App Loopback (B) 2
 ```
 
 To see all MIDI devices registered with the system use the `list` command:
 
 ```
 midi > list
+--- INPUT DEVICES ---
+  'Default App Loopback (A) 0'
+  'Default App Loopback (B) 1'
+
+--- OUTPUT DEVICES ---
+  'Microsoft GS Wavetable Synth 0'
+  'Default App Loopback (A) 1'
+  'Default App Loopback (B) 2'
 ```
 
 ## Edit Routes
