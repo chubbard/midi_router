@@ -3,6 +3,9 @@ import cmd2
 from cmd2 import CompletionItem
 import readline
 import sys
+import json
+import re
+from pathlib import Path
 
 class MidiPort:
     def __init__(self, midi_port):
@@ -52,6 +55,18 @@ class Midi:
             Midi.midi_out[name] = MidiOutPort(name)
         return Midi.midi_out[name]
         
+    def find_in_port(port_name:str) -> MidiPort:
+        """Find an in port by partial name"""
+        for name in mido.get_input_names():
+            if port_name in name:
+                return Midi.open_input(name)
+        
+    def find_out_port(port_name:str) -> MidiPort:
+        """Find an out port by partial name"""
+        for name in mido.get_output_names():
+            if port_name in name:
+                return Midi.open_output(name)
+
     def find_port(portName:str) -> MidiPort:
         for name in mido.get_input_names():
             if portName == name:
@@ -77,9 +92,10 @@ class Midi:
         return hits
 
 class MidiRoute:
-    def __init__(self, inputName:str):
-        self.inport = Midi.open_input(inputName)
-        self.outports = []
+    def __init__(self, inputName:str = None):
+        if inputName:
+            self.inport = Midi.open_input(inputName)
+            self.outports = []
         
     def add_route(self, *args):
         for p in args:
@@ -98,6 +114,37 @@ class MidiRoute:
         self.inport.unlisten(self.receive)
         for p in self.outports:
             p.port.panic()
+            
+    def to_save(self):
+        """Map this route to a saved object format"""
+        return { 
+            "inport": clean_port_name( self.inport.name ),
+            "outports": [ clean_port_name( op.name ) for op in self.outports ] 
+        }
+        
+    def from_restore(self, json):
+        """Given a saved object restore this route"""
+        self.inport = Midi.find_in_port(json['inport'])
+        self.outports = [ Midi.find_out_port( op ) for op in json['outports'] ]
+        return self
+        
+
+def clean_port_name(port_name):
+    
+    # 1. Strip Linux ALSA address patterns like " 128:0" or ":0" at the end
+    cleaned = re.sub(re.compile(r'\s*\d+:\d+$'), '', port_name)
+    cleaned = re.sub(re.compile(r':\d+$'), '', cleaned)
+    
+    # 2. Strip common Windows instance suffixes like " 1", " 2", etc. at the end
+    cleaned = re.sub(re.compile(r'\s+\d+$'), '', cleaned)
+    
+    # 3. Strip Windows instance prefixes like "1- ", "2- " at the start
+    cleaned = re.sub(re.compile(r'^\d+-\s*'), '', cleaned)
+    
+    # 4. Strip extra brackets or standalone numbers often added by RtMidi
+    cleaned = re.sub(re.compile(r'\s*\(\d+\)$'), '', cleaned)
+
+    return cleaned.strip()
 
 class MidiRouterConsole(cmd2.Cmd):
     
@@ -124,8 +171,26 @@ class MidiRouterConsole(cmd2.Cmd):
             print(f"{index+1}\t{route.inport.name} >>")
             for port in route.outports:
                 print(f"\t\t-> {port.name}")
-        if len(routes) < 1:
+        if len(self.routes) < 1:
             print("No routes defined")
+            
+    def do_save(self,args):
+        """Save routes"""
+        midi_router_dir = Path.home() / '.midi_router/'
+        midi_router_dir.mkdir(parents=True,exist_ok=True)
+        with open(midi_router_dir / 'routes.json', 'w') as f:
+            json.dump([route.to_save() for route in self.routes], f)
+        print(f"Saved {len(self.routes)} routes")
+            
+    def do_restore(self,args):
+        """Load all previously saved routes.  This preserves any existing routes."""
+        prior_routes = len(self.routes)
+        midi_router_dir = Path.home() / '.midi_router/'
+        midi_router_dir.mkdir(parents=True,exist_ok=True)
+        with open(midi_router_dir / 'routes.json', 'r') as f:
+            saved_routes = json.load( f )
+            self.routes = self.routes + [ MidiRoute().from_restore( json ) for json in saved_routes ]
+        print(f"Restored {len(self.routes)-prior_routes} routes")
 
     def midi_in_provider(self) -> list:
         results = Midi.find_all()
@@ -158,7 +223,6 @@ class MidiRouterConsole(cmd2.Cmd):
     @cmd2.with_argparser(removeRouteParser)
     def do_delete(self,args):
         index = args.route
-        print(f"Removing route {index}")
         route = self.routes[index-1]
         if route:
             self.routes.remove( route )
@@ -188,9 +252,6 @@ class MidiRouterConsole(cmd2.Cmd):
             
  
 if __name__ == '__main__':
-    routes = [
-#        MidiRoute("HYDRASYNTH EXPLORER 3").addRoute("KOBOL EXPANDER 6", "MODEL D 5")
-    ]
     router = MidiRouterConsole()
     try:
         router.cmdloop()
