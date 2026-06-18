@@ -158,8 +158,8 @@ class MidiRouterConsole(cmd2.Cmd):
     @cmd2.with_argparser(removeRouteParser)
     def do_delete(self,args):
         index = args.route
-        print(f"Removing route {route}")
-        route = self.routes[index]
+        print(f"Removing route {index}")
+        route = self.routes[index-1]
         if route:
             self.routes.remove( route )
         print(f"Removed route {index}")
