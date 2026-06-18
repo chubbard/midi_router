@@ -22,8 +22,9 @@
             <File name=".venv\pyvenv.cfg" />
         </Folder>
         <File name="midi_router.py" />
-        <File name="print_midi.py" />
         <File name="py.ini" />
         <File name="requirements.txt" />
+        <File name="README.md" />
+        <File name="LICENSE" />
     </Project>
 </NotepadPlus>
